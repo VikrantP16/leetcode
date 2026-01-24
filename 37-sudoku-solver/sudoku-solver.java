@@ -1,54 +1,56 @@
 class Solution {
-    public void solveSudoku(char[][] board) {
-        solve(board);
-    }
+    private boolean[][] rows = new boolean[9][9];
+    private boolean[][] cols = new boolean[9][9];
+    private boolean[][] boxes = new boolean[9][9];
+    private List<int[]> emptyCells = new ArrayList<>();
     
-    private boolean solve(char[][] board) {
+    public void solveSudoku(char[][] board) {
+        // Initialize constraints
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 if (board[i][j] == '.') {
-                    for (char num = '1'; num <= '9'; num++) {
-                        if (isValid(board, i, j, num)) {
-                            board[i][j] = num;
-                            if (solve(board)) {
-                                return true;
-                            }
-                            board[i][j] = '.';
-                        }
-                    }
-                    return false;
+                    emptyCells.add(new int[]{i, j});
+                } else {
+                    int num = board[i][j] - '1';
+                    rows[i][num] = true;
+                    cols[j][num] = true;
+                    boxes[(i / 3) * 3 + j / 3][num] = true;
                 }
             }
         }
-        return true;
+        
+        solve(board, 0);
     }
     
-    private boolean isValid(char[][] board, int row, int col, char num) {
-        // Check row
-        for (int j = 0; j < 9; j++) {
-            if (board[row][j] == num) {
-                return false;
-            }
+    private boolean solve(char[][] board, int idx) {
+        if (idx == emptyCells.size()) {
+            return true;
         }
         
-        // Check column
-        for (int i = 0; i < 9; i++) {
-            if (board[i][col] == num) {
-                return false;
-            }
-        }
+        int row = emptyCells.get(idx)[0];
+        int col = emptyCells.get(idx)[1];
+        int boxIdx = (row / 3) * 3 + col / 3;
         
-        // Check 3x3 box
-        int boxRow = 3 * (row / 3);
-        int boxCol = 3 * (col / 3);
-        for (int i = boxRow; i < boxRow + 3; i++) {
-            for (int j = boxCol; j < boxCol + 3; j++) {
-                if (board[i][j] == num) {
-                    return false;
+        for (int num = 0; num < 9; num++) {
+            if (!rows[row][num] && !cols[col][num] && !boxes[boxIdx][num]) {
+                // Place number
+                board[row][col] = (char) ('1' + num);
+                rows[row][num] = true;
+                cols[col][num] = true;
+                boxes[boxIdx][num] = true;
+                
+                if (solve(board, idx + 1)) {
+                    return true;
                 }
+                
+                // Backtrack
+                board[row][col] = '.';
+                rows[row][num] = false;
+                cols[col][num] = false;
+                boxes[boxIdx][num] = false;
             }
         }
         
-        return true;
+        return false;
     }
 }
